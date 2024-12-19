@@ -1,252 +1,319 @@
 ﻿#include "header.h"
-#include <iostream>
-#include <algorithm>
 
-std::unordered_map<int, Pipe> pipes;
-std::unordered_map<int, CompressorStation> stations;
-int nextPipeId = 1;
-int nextStationId = 1;
+std::vector<Tube> tubes;
 
-void addPipe() {
-    Pipe p;
-    p.id = nextPipeId++;
+void Print() {
+    std::cout << "-----------------------\n"
+        << "1. Добавить трубу \n"
+        << "2. Добавить КС \n"
+        << "3. Просмотр всех объектов \n"
+        << "4. Редактировать трубу \n"
+        << "5. Редактировать КС \n"
+        << "6. Сохранить в файл\n"
+        << "7. Загрузить из файла\n"
+        << "0. Выход \n"
+        << "-----------------------\n"
+        << "Выберите пункт меню: ";
+}
+
+void incorrectData() {
+    std::cout << "Введите корректное значение: ";
+    std::cin.clear();
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+}
+
+void createTube() {
+    Tube tube;
+
     std::cout << "Введите название трубы: ";
     std::cin.ignore();
-    std::getline(std::cin, p.name);
+    std::getline(std::cin, tube.name);
+
+    std::cout << "Введите длину трубы: ";
+    while (!(std::cin >> tube.length) || tube.length <= 0) {
+        incorrectData();
+    }
+
+    std::cout << "Введите диаметр трубы: ";
+    while (!(std::cin >> tube.diameter) || tube.diameter <= 0) {
+        incorrectData();
+    }
+
     std::cout << "Труба в ремонте? (1 - да, 0 - нет): ";
-    std::cin >> p.inRepair;
-    pipes[p.id] = p;
-    std::cout << "Труба добавлена с ID: " << p.id << std::endl;
+    int repairStatus;
+    while (!(std::cin >> repairStatus) || (repairStatus != 0 && repairStatus != 1)) {
+        incorrectData();
+    }
+    tube.inRepair = (repairStatus == 1);
+
+    // Добавление трубы в массив
+    tubes.push_back(tube);
+    std::cout << "Труба успешно добавлена в массив!\n";
 }
 
-void editPipe() {
-    int id;
-    std::cout << "Введите ID трубы для редактирования: ";
-    std::cin >> id;
-    if (pipes.find(id) != pipes.end()) {
-        std::cout << "Редактируем трубу ID: " << id << std::endl;
-        std::cout << "Новое название трубы: ";
+CompressionStation createCompressionStation() {
+    CompressionStation cs;
+    if (cs.name.empty()) {
+        std::cout << "Введите название станции: ";
         std::cin.ignore();
-        std::getline(std::cin, pipes[id].name);
-        std::cout << "Труба в ремонте? (1 - да, 0 - нет): ";
-        std::cin >> pipes[id].inRepair;
-        std::cout << "Труба обновлена!" << std::endl;
+        std::getline(std::cin, cs.name);
+
+        std::cout << "Введите количество цехов: ";
+        while (!(std::cin >> cs.numbersOfWorkshops) || cs.numbersOfWorkshops <= 0) {
+            incorrectData();
+        }
+
+        std::cout << "Введите количество работающих цехов: ";
+        while (!(std::cin >> cs.workshopsAtWork) || cs.workshopsAtWork > cs.numbersOfWorkshops || cs.workshopsAtWork <= 0) {
+            incorrectData();
+        }
+
+        std::cout << "Введите значение эффективности: ";
+        while (!(std::cin >> cs.efficiency) || cs.efficiency <= 0) {
+            incorrectData();
+        }
+        std::cout << "Компрессорная станция добавлена!\n";
+        return cs;
     }
     else {
-        std::cout << "Труба с таким ID не найдена." << std::endl;
+        std::cout << "Компрессорная станция уже создана. Данный объект может быть только один.\n";
     }
+    return cs;
 }
-
-void deletePipe() {
-    int id;
-    std::cout << "Введите ID трубы для удаления: ";
-    std::cin >> id;
-    if (pipes.erase(id)) {
-        std::cout << "Труба удалена." << std::endl;
+void displayTubes() {
+    if (tubes.empty()) {
+        std::cout << "Список труб пуст.\n";
     }
     else {
-        std::cout << "Труба с таким ID не найдена." << std::endl;
-    }
-}
-
-void findPipes() {
-    std::cout << "Поиск труб:\n1. По названию\n2. По признаку \"в ремонте\": ";
-    int option;
-    std::cin >> option;
-    if (option == 1) {
-        std::string name;
-        std::cout << "Введите название трубы: ";
-        std::cin.ignore();
-        std::getline(std::cin, name);
-        for (const auto& [id, p] : pipes) {
-            if (p.name == name) {
-                std::cout << "Труба ID: " << id << ", Название: " << p.name << ", В ремонте: " << (p.inRepair ? "Да" : "Нет") << std::endl;
-            }
-        }
-    }
-    else if (option == 2) {
-        bool inRepair;
-        std::cout << "Ищем трубы \"в ремонте\"? (1 - да, 0 - нет): ";
-        std::cin >> inRepair;
-        for (const auto& [id, p] : pipes) {
-            if (p.inRepair == inRepair) {
-                std::cout << "Труба ID: " << id << ", Название: " << p.name << ", В ремонте: " << (p.inRepair ? "Да" : "Нет") << std::endl;
-            }
+        std::cout << "--- Список всех труб ---\n";
+        for (size_t i = 0; i < tubes.size(); ++i) {
+            const Tube& tube = tubes[i];
+            std::cout << "Труба #" << i + 1 << "\n"
+                << "Название: " << tube.name << "\n"
+                << "Длина: " << tube.length << "\n"
+                << "Диаметр: " << tube.diameter << "\n"
+                << "В ремонте: " << (tube.inRepair ? "Да" : "Нет") << "\n\n";
         }
     }
 }
 
-void batchEditPipes() {
-    std::cout << "Пакетное редактирование труб:\n1. Все трубы\n2. Трубы по фильтру\nВыберите: ";
-    int option;
-    std::cin >> option;
-    if (option == 1) {
-        for (auto& [id, p] : pipes) {
-            std::cout << "Труба ID: " << id << " (" << p.name << ") сейчас \"в ремонте\": " << (p.inRepair ? "Да" : "Нет") << std::endl;
-            std::cout << "Новая метка \"в ремонте\": (1 - да, 0 - нет): ";
-            std::cin >> p.inRepair;
+void displayTubes(const Tube & tube) {
+    if (tubes.empty()) {
+        std::cout << "Список труб пуст.\n";
+    } else {
+        std::cout << "--- Список всех труб ---\n";
+        for (size_t i = 0; i < tubes.size(); ++i) {
+            const Tube& tube = tubes[i];
+            std::cout << "Труба #" << i + 1 << "\n"
+                      << "Название: " << tube.name << "\n"
+                      << "Длина: " << tube.length << "\n"
+                      << "Диаметр: " << tube.diameter << "\n"
+                      << "В ремонте: " << (tube.inRepair ? "Да" : "Нет") << "\n\n";
         }
     }
-    else if (option == 2) {
-        findPipes();
-        std::cout << "Введите ID труб для редактирования (через пробел, 0 для завершения): ";
-        std::vector<int> ids;
-        int id;
-        while (std::cin >> id && id != 0) {
-            ids.push_back(id);
-        }
-        for (int id : ids) {
-            if (pipes.find(id) != pipes.end()) {
-                std::cout << "Труба ID: " << id << " (" << pipes[id].name << ") сейчас \"в ремонте\": " << (pipes[id].inRepair ? "Да" : "Нет") << std::endl;
-                std::cout << "Новая метка \"в ремонте\": (1 - да, 0 - нет): ";
-                std::cin >> pipes[id].inRepair;
-            }
-            else {
-                std::cout << "Труба с ID " << id << " не найдена." << std::endl;
-            }
-        }
-    }
-}
-void addStation() {
-    CompressorStation cs;
-    cs.id = nextStationId++;
-    std::cout << "Введите название КС: ";
-    std::cin.ignore();
-    std::getline(std::cin, cs.name);
-    std::cout << "Общее количество цехов: ";
-    std::cin >> cs.totalShops;
-    std::cout << "Количество незадействованных цехов: ";
-    std::cin >> cs.inactiveShops;
-    stations[cs.id] = cs;
-    std::cout << "КС добавлена с ID: " << cs.id << std::endl;
 }
 
-void editStation() {
-    int id;
-    std::cout << "Введите ID КС для редактирования: ";
-    std::cin >> id;
-    if (stations.find(id) != stations.end()) {
-        std::cout << "Редактируем КС ID: " << id << std::endl;
-        std::cout << "Новое название КС: ";
-        std::cin.ignore();
-        std::getline(std::cin, stations[id].name);
-        std::cout << "Общее количество цехов: ";
-        std::cin >> stations[id].totalShops;
-        std::cout << "Количество незадействованных цехов: ";
-        std::cin >> stations[id].inactiveShops;
-        std::cout << "КС обновлена!" << std::endl;
+void displayCompressionStation(const CompressionStation& cs) {
+    if (!cs.name.empty()) {
+        std::cout << "--- Компрессорная станция --- \n"
+            << "Название станции: " << cs.name << "\n"
+            << "Количество цехов: " << cs.numbersOfWorkshops << "\n"
+            << "Цехов в работе: " << cs.workshopsAtWork << "\n"
+            << "Эффективность: " << cs.efficiency << "\n";
     }
     else {
-        std::cout << "КС с таким ID не найдена." << std::endl;
+        std::cout << "Компрессорная станция не создана.\n";
     }
 }
 
-void deleteStation() {
-    int id;
-    std::cout << "Введите ID КС для удаления: ";
-    std::cin >> id;
-    if (stations.erase(id)) {
-        std::cout << "КС удалена." << std::endl;
+void editTube(Tube& tube) {
+    if (tube.name.empty()) {
+        std::cout << "Труба не создана. Сначала создайте трубу.\n";
     }
     else {
-        std::cout << "КС с таким ID не найдена." << std::endl;
-    }
-}
+        std::string newName;
+        double newLength;
+        double newDiameter;
+        int newRepairStatus;
 
-void findStations() {
-    std::cout << "Поиск КС:\n1. По названию\n2. По проценту незадействованных цехов: ";
-    int option;
-    std::cin >> option;
-    if (option == 1) {
-        std::string name;
-        std::cout << "Введите название КС: ";
+        std::cout << "Название: " << tube.name << ". Введите новое имя или нажмите Enter, чтобы оставить текущее: ";
         std::cin.ignore();
-        std::getline(std::cin, name);
-        for (const auto& [id, cs] : stations) {
-            if (cs.name == name) {
-                std::cout << "КС ID: " << id << ", Название: " << cs.name << ", Незадействованные цехи: " << cs.inactiveShops << "/" << cs.totalShops << std::endl;
-            }
+        std::getline(std::cin, newName);
+        if (!newName.empty()) tube.name = newName;
+
+        std::cout << "Длина: " << tube.length << ". Введите новую длину или 0, чтобы оставить текущую: ";
+        while (!(std::cin >> newLength)) {
+            incorrectData();
         }
-    }
-    else if (option == 2) {
-        double percentage;
-        std::cout << "Введите минимальный процент незадействованных цехов: ";
-        std::cin >> percentage;
-        for (const auto& [id, cs] : stations) {
-            double inactivePercentage = (cs.totalShops > 0) ? (cs.inactiveShops * 100.0 / cs.totalShops) : 0.0;
-            if (inactivePercentage >= percentage) {
-                std::cout << "КС ID: " << id << ", Название: " << cs.name << ", Незадействованные цехи: " << inactivePercentage << "%" << std::endl;
-            }
+        if (newLength != 0) tube.length = newLength;
+
+        std::cout << "Диаметр: " << tube.diameter << ". Введите новый диаметр или 0, чтобы оставить текущий: ";
+        while (!(std::cin >> newDiameter)) {
+            incorrectData();
         }
+        if (newDiameter != 0) tube.diameter = newDiameter;
+
+        std::cout << "В ремонте (1 - да, 0 - нет): ";
+        while (!(std::cin >> newRepairStatus) || (newRepairStatus != 0 && newRepairStatus != 1)) {
+            incorrectData();
+        }
+        tube.inRepair = (newRepairStatus == 1);
     }
 }
 
-// Главное меню
-void menu() {
-    while (true) {
-        std::cout << "\n-----------------------\n"
-            << "1. Добавить трубу \n"
-            << "2. Добавить КС \n"
-            << "3. Просмотр всех объектов \n"
-            << "4. Редактировать трубу \n"
-            << "5. Редактировать КС \n"
-            << "6. Удалить трубу \n"
-            << "7. Удалить КС \n"
-            << "8. Поиск труб \n"
-            << "9. Поиск КС \n"
-            << "10. Пакетное редактирование труб \n"
-            << "0. Выход \n"
-            << "-----------------------\n"
-            << "Выберите пункт меню: ";
+void editCompressionStation(CompressionStation& cs) {
+    if (cs.name.empty()) {
+        std::cout << "Компрессорная станция не создана. Сначала создайте КС.\n";
+        return;
+    }
+    else {
+        std::string newName;
+        int newNumbersOfWorkshops;
+        int newWorkshopsAtWork;
+        int newEfficiency;
 
-        int choice;
-        std::cin >> choice;
+        std::cout << "Название станции: " << cs.name << ". Введите новое имя или нажмите Enter, чтобы оставить текущее: ";
+        std::cin.ignore();
+        std::getline(std::cin, newName);
+        if (!newName.empty()) cs.name = newName;
 
-        switch (choice) {
-        case 1:
-            addPipe();
-            break;
-        case 2:
-            addStation();
-            break;
-        case 3:
-            for (const auto& [id, p] : pipes) {
-                std::cout << "Труба ID: " << id << ", Название: " << p.name << ", В ремонте: " << (p.inRepair ? "Да" : "Нет") << std::endl;
-            }
-            for (const auto& [id, cs] : stations) {
-                std::cout << "КС ID: " << id << ", Название: " << cs.name << ", Незадействованные цехи: " << cs.inactiveShops << "/" << cs.totalShops << std::endl;
-            }
-            break;
-        case 4:
-            editPipe();
-            break;
-        case 5:
-            editStation();
-            break;
-        case 6:
-            deletePipe();
-            break;
-        case 7:
-            deleteStation();
-            break;
-        case 8:
-            findPipes();
-            break;
-        case 9:
-            findStations();
-            break;
-        case 10:
-            batchEditPipes();
-            break;
-        case 0:
-            return;
-        default:
-            std::cout << "Некорректный выбор. Попробуйте снова." << std::endl;
+        std::cout << "Количество цехов: " << cs.numbersOfWorkshops << ". Введите новое значение или 0, чтобы оставить текущее: ";
+        while (!(std::cin >> newNumbersOfWorkshops)) {
+            incorrectData();
         }
+        if (newNumbersOfWorkshops != 0) cs.numbersOfWorkshops = newNumbersOfWorkshops;
+
+        std::cout << "Цехов в работе: " << cs.workshopsAtWork << ". Введите новое значение или 0, чтобы оставить текущее: ";
+        while (!(std::cin >> newWorkshopsAtWork) || (newWorkshopsAtWork > cs.numbersOfWorkshops)) {
+            incorrectData();
+        }
+        if (newWorkshopsAtWork != 0) cs.workshopsAtWork = newWorkshopsAtWork;
+
+        std::cout << "Эффективность: " << cs.efficiency << ". Введите новое значение или 0, чтобы оставить текущее: ";
+        while (!(std::cin >> newEfficiency)) {
+            incorrectData();
+        }
+        if (newEfficiency != 0) cs.efficiency = newEfficiency;
+    }
+}
+
+void saveTube(const Tube& tube, std::ofstream& file) {
+    if (!tube.name.empty()) {
+        file << "tube\n";
+        file << tube.name << "\n";
+        file << tube.length << "\n";
+        file << tube.diameter << "\n";
+        file << tube.inRepair << "\n";
+    }
+}
+
+void saveCs(const CompressionStation& cs, std::ofstream& file) {
+    if (!cs.name.empty()) {
+        file << "cs\n";
+        file << cs.name << "\n";
+        file << cs.numbersOfWorkshops << "\n";
+        file << cs.workshopsAtWork << "\n";
+        file << cs.efficiency << "\n";
+    }
+}
+
+void saveToFile(const Tube& tube, const CompressionStation& cs) {
+    std::ofstream file("smeta.txt");
+    if (!file.is_open()) {
+        std::cerr << "Ошибка: не удалось открыть файл для записи." << std::endl;
+        return;
+    }
+
+    saveTube(tube, file);
+    saveCs(cs, file);
+
+    file.close();
+    std::cout << "Данные сохранены\n";
+}
+
+Tube readingTube(std::ifstream& fin) {
+    Tube tube;
+    fin >> std::ws;
+    std::getline(fin, tube.name);
+    fin >> tube.length;
+    fin >> tube.diameter;
+    fin >> tube.inRepair;
+    return tube;
+}
+
+CompressionStation readingCS(std::ifstream& fin) {
+    CompressionStation cs;
+    fin >> std::ws;
+    std::getline(fin, cs.name);
+    fin >> cs.numbersOfWorkshops;
+    fin >> cs.workshopsAtWork;
+    fin >> cs.efficiency;
+    return cs;
+}
+
+void loadFromFile(Tube& tube, CompressionStation& cs) {
+    std::ifstream fin("smeta.txt", std::ios::in);
+    if (fin.is_open()) {
+        std::string marker;
+        while (fin >> marker) {
+            fin.ignore();
+            if (marker == "tube") {
+                tube = readingTube(fin);
+                std::cout << "Труба загружена!\n";
+            }
+            else if (marker == "cs") {
+                cs = readingCS(fin);
+                std::cout << "КС загружена!\n";
+            }
+        }
+        fin.close();
+    }
+    else {
+        std::cout << "Ошибка открытия файла!" << "\n";
     }
 }
 
 int main() {
-    menu();
-    return 0;
+    std::setlocale(LC_ALL, "Russian");
+    Tube tube;
+    CompressionStation cs;
+    int choice;
+
+    while (true) {
+        Print();
+        while (!(std::cin >> choice)) {
+            incorrectData();
+        }
+
+        switch (choice) {
+        case 1:
+            tube = createTube();
+            break;
+        case 2:
+            cs = createCompressionStation();
+            break;
+        case 3:
+            displayTube(tube);
+            displayCompressionStation(cs);
+            break;
+        case 4:
+            editTube(tube);
+            break;
+        case 5:
+            editCompressionStation(cs);
+            break;
+        case 6:
+            saveToFile(tube, cs);
+            break;
+        case 7:
+            loadFromFile(tube, cs);
+            break;
+        case 0:
+            std::cout << "Выход из программы.\n";
+            return 0;
+        default:
+            std::cout << "Неверный пункт меню.\n";
+            break;
+        }
+    }
 }

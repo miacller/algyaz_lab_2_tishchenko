@@ -1,34 +1,45 @@
 #ifndef HEADER_H
 #define HEADER_H
 
+#include <iostream>
 #include <string>
-#include <unordered_map>
+#include <fstream>
+#include <limits>
 #include <vector>
 
-struct Pipe {
-    int id;
+extern std::vector<Tube> tubes;
+
+// Структуры
+struct Tube {
     std::string name;
+    double length;
+    double diameter;
     bool inRepair;
 };
 
-struct CompressorStation {
-    int id;
+struct CompressionStation {
     std::string name;
-    int totalShops;
-    int inactiveShops;
+    int numbersOfWorkshops;
+    int workshopsAtWork;
+    int efficiency;
 };
 
-void addPipe();
-void editPipe();
-void deletePipe();
-void findPipes();
-void batchEditPipes();
+// Прототипы функций
+void Print();
+void incorrectData();
 
-void addStation();
-void editStation();
-void deleteStation();
-void findStations();
+Tube createTube();
+CompressionStation createCompressionStation();
 
-void menu();
+void displayTube(const Tube& tube);
+void displayCompressionStation(const CompressionStation& cs);
 
-#endif 
+void editTube(Tube& tube);
+void editCompressionStation(CompressionStation& cs);
+
+void saveToFile(const Tube& tube, const CompressionStation& cs);
+Tube readingTube(std::ifstream& fin);
+CompressionStation readingCS(std::ifstream& fin);
+void loadFromFile(Tube& tube, CompressionStation& cs);
+
+#endif // HEADER_H
